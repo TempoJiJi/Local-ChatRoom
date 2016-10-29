@@ -1,5 +1,5 @@
 # A simple local chat room in Linux Ubuntu
-# Basic program for communication between process
+Basic program for communication between process
 
 ## To compile the program:
 ```shell
