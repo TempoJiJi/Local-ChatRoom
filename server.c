@@ -33,8 +33,11 @@ int client_broadcast(mail_t *mail, int sender)
 {
     /* Send mail to other clients in the room */
     for(int i=1; i<MAX_MEMBER; i++) {
-	if (room[i].client_box && i != sender) 
+	if (room[i].client_box && i != sender){ 
+	    /* Wait if mailbox is fulled */
+	    while (mailbox_check_full(room[i].client_box)); 
 	    mailbox_send(room[i].client_box, mail);
+	}
     }
 }
 
@@ -62,7 +65,7 @@ int main(int argc,char *argv[])
     while (shutdown) {
 	printf("Listening...\n");
 	/* Wait for mail come in and get the mail */
-	while (server_box->in == server_box->out && shutdown);
+	while (mailbox_check_empty(server_box) && shutdown);
     
 	if (!shutdown)
 	    break;
@@ -74,10 +77,10 @@ int main(int argc,char *argv[])
 
 	switch (mail->type) {
 	    case JOIN:
-		printf("Join process...\n");
+		printf("Join processing...\n");
 		    room[mail->from].client_box = box;
 		    memcpy(room[mail->from].name, mail->sstr, sizeof(mail->sstr));
-		    sprintf(mail->lstr, "%s is joined!", mail->sstr); 
+		    sprintf(mail->lstr, "%s has joined the room!", mail->sstr); 
 		    mail->type = SERVER;	// Mark the mail sent by server
 		    client_broadcast(mail,mail->from);
 		break;
@@ -88,7 +91,7 @@ int main(int argc,char *argv[])
 		break;
 
 	    case LEAVE:
-		printf("Leaving process...\n");
+		printf("Leaving processing...\n");
 		    room[mail->from].client_box = NULL;
 		    sprintf(mail->lstr, "%s has left the room!", mail->sstr);
 		    mail->type = SERVER;	//Mark the mail sent by server
@@ -97,18 +100,21 @@ int main(int argc,char *argv[])
 		break;
 
 	    case LIST:
-		printf("List process...\n");
+		printf("List processing...\n");
 		    mail->type = SERVER;	//Mark the mail sent by server
 		    for (int i=0; i<MAX_MEMBER; i++) {
+			/* List one by one */
 			if(room[i].client_box && i != mail->from){
 			    sprintf(mail->lstr, "%s is inside the room!", room[i].name);
+			    /* Wait if mailbox is fulled */
+			    while (mailbox_check_full(box));
 			    mailbox_send(box, mail);
 			}
 		    }
 		break;
 
 	    case WHISPER:
-		printf("Whisper process...\n");
+		printf("Whisper processing...\n");
 		    Mail_box_t *reciever;
 		    for (int i=0; i<MAX_MEMBER; i++) {
 			if(strcmp(room[i].name, mail->sstr) == 0){
@@ -117,6 +123,8 @@ int main(int argc,char *argv[])
 			}
 		    }
 		    memcpy(mail->sstr, room[mail->from].name, sizeof(room[mail->from].name));
+		    /* Wait if mailbox is fulled */
+		    while (mailbox_check_full(reciever)); 
 		    mailbox_send(reciever, mail);
 		break;
 	}

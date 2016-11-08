@@ -31,7 +31,7 @@ void print_help()
 	    "--LIST    : List the room members\n"
 	    "--LEAVE   : Leave the room\n"
 	    "--WHISPER : Priave message\n"
-	    "--HELP    : Get more information\n" );
+	    "--HELP    : Get more information\n\n" );
 }
 
 void recv(void *args)
@@ -78,12 +78,18 @@ void send(void *args)
 	/* Checking type */
 	if (strcmp(mail->lstr, "--LEAVE") == 0) {
 	    mail->type = LEAVE;
+
+	    /* Wait if server mailbox is fulled */
+	    while (mailbox_check_full(server)); 
 	    mailbox_send(server, mail);
 	    shutdown = 0;   // shut down the process
 	}
 
 	else if (strcmp(mail->lstr, "--LIST") == 0) {
 	    mail->type = LIST;
+
+	    /* Wait if server mailbox is fulled */
+	    while (mailbox_check_full(server)); 
 	    mailbox_send(server, mail);
 	}
 
@@ -95,6 +101,9 @@ void send(void *args)
 	    printf("Choose a person for private message\n");
 	    /* List the room members for the user first */
 	    mail->type = LIST;
+
+	    /* Wait if server mailbox is fulled */
+	    while (mailbox_check_full(server)); 
 	    mailbox_send(server,mail);
 
 	    /* For whisper :	     *
@@ -117,12 +126,16 @@ void send(void *args)
 	    while (mail->lstr[i] != '\0') 
 		i++;
 	    mail->lstr[i-1] = '\0';
-	    
+	   
+	    /* Wait if server mailbox is fulled */
+	    while (mailbox_check_full(server)); 
 	    mailbox_send(server,mail);        	    
 	}
 
 	else {
 	    mail->type = BROADCAST;
+	    /* Wait if server mailbox is fulled */
+	    while (mailbox_check_full(server)); 
 	    mailbox_send(server, mail);
 	}
     }
@@ -166,6 +179,8 @@ int main(int argc, char *argv[])
     mail_init(&mail);
     mail->type = JOIN;
 
+    /* Wait if server mailbox is fulled */
+    while (mailbox_check_full(server)); 
     mailbox_send(server,mail);
 
     /* @Thread_s : For send *
