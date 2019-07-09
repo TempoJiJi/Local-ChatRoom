@@ -1,6 +1,6 @@
 # A simple local chat room in Linux Ubuntu
-Basic program for communication bewtween process.
-Those process are link to a shared memory, every single of message will pass by the shared memory.
+A program for communication bewtween process.
+Those process are linked within shared memory, every single of message will passed by the shared memory.
 
 ## To compile the program:
 ```shell
